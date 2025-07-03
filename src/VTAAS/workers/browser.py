@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from VTAAS.utils.logger import get_logger
 
 
-print(f"--- BROWSER.PY IS LOADED FROM: {__file__} ---")
+
 
 
 T = TypeVar("T", bound="Browser")
@@ -197,15 +197,11 @@ class Browser:
             self.logger.error(f"Reload error: {str(e)}")
             return f"An error happened while reloading url {url}"
 
-    # 在 browser.py 文件中，用这段代码替换原有的 click 方法
     async def click(self, mark: str) -> str:
-        self.logger.info(f"[DEBUG] Entering browser.click method, target mark: '{mark}'")
+
         before_url = self.page.url
         outcome = ""
-
-        # This is the most critical step, we need to see what it returns
         result = await self._resolve_mark(mark)
-        self.logger.info(f"[DEBUG] Result from _resolve_mark method: {result}")
 
         if "error" in result or "locator" not in result:
             error_message = result.get("error", "Unknown error")
@@ -218,12 +214,9 @@ class Browser:
         outcome += f"Clicked on ['{mark}'] ==> {html_element_str}. "
 
         try:
-            self.logger.info(f"[DEBUG] Preparing to execute .click() on the element for mark '{mark}'")
             # Using force=True and a timeout is a more robust way to click
             await locator.click(force=True, timeout=5000)
-            self.logger.info("[DEBUG] Playwright .click() command issued successfully.")
             await self.page.wait_for_load_state("domcontentloaded")
-            self.logger.info("[DEBUG] Page reached 'domcontentloaded' state.")
         except Exception as error:
             # Log the full traceback information
             self.logger.error(f"[DEBUG] A fatal error occurred while clicking element '{mark}': {error}", exc_info=True)
@@ -232,7 +225,6 @@ class Browser:
         after_url = self.page.url
         is_url_effect = before_url != after_url
         if is_url_effect:
-            self.logger.info(f"[DEBUG] URL changed after click. New URL: {after_url}")
             outcome += f"A page change occurred. New URL: {after_url}"
         else:
             self.logger.info("[DEBUG] URL did not change after click.")
@@ -258,7 +250,7 @@ class Browser:
                 _ = await locator.select_option(value)
             else:
                 await locator.clear()
-                await locator.type(value)
+                await locator.type(value,delay=50)
 
             typed_value = await locator.input_value()
             if typed_value == value:

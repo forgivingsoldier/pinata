@@ -32,7 +32,7 @@ from ..schemas.worker import (
     WorkerInput,
 )
 
-print(f"--- ACTOR.PY IS LOADED FROM: {__file__} ---")
+
 
 @final
 class Actor(Worker):
@@ -128,37 +128,23 @@ class Actor(Worker):
         )
 
     async def run_command(self, command: Command) -> str:
-        self.logger.info(f"The the the the the the the tt tt tt tt t tt t tt t tt t tt")
-        self.info = self.logger.info(f"Browser type: {type(self.browser)}")
-        self.logger.info(f"Browser has click method: {hasattr(self.browser, 'click')}")
+
         self.logger.info(f"Received command: {command!r}, type: {type(command)}")
         self.logger.info(f"Type of command: {type(command)}, id: {id(type(command))}")
-        self.logger_info = self.logger.info(f"Type of ClickCommand: {ClickCommand}, id: {id(ClickCommand)}")
-        self.logger.info(f"isinstance(command, ClickCommand): {isinstance(command, ClickCommand)}")
-        self.logger.info(f"command.name == 'click': {getattr(command, 'name', None) == 'click'}")
 
-        if isinstance(command, ClickCommand) and getattr(command, "name", None) == "click":
-            # -------------------- Debug Block 2: Start --------------------
-            label_to_click = str(command.label)
-            self.logger.info(f"[DEBUG] Preparing to call browser.click, target label: '{label_to_click}'")
-            try:
-                result = await self.browser.click(label_to_click)
-                self.logger.info(f"[DEBUG] browser.click call finished, returned: {result}")
-                return result
-            except Exception as e:
-                self.logger.error(f"[DEBUG] A fatal error occurred while calling browser.click: {e}", exc_info=True)
-                return f"Error during click: {e}"
-            # -------------------- Debug Block 2: End --------------------
-        elif isinstance(command, ClickCommand) and getattr(command, "name", None) == "goto":
-            return await self.browser.goto(command.url)
-        elif isinstance(command, ClickCommand) and getattr(command, "name", None) == "fill":
-            return await self.browser.fill(str(command.label), command.value)
-        elif isinstance(command, ClickCommand) and getattr(command, "name", None) == "select":
-            return await self.browser.select(str(command.label), command.options)
-        elif isinstance(command, ClickCommand) and getattr(command, "name", None) == "scroll":
-            return await self.browser.vertical_scroll(command.direction)
-        elif isinstance(command, ClickCommand) and getattr(command, "name", None) == "finish":
-            return ""
+        match command:
+            case ClickCommand(name="click"):
+                return await self.browser.click(str(command.label))
+            case GotoCommand(name="goto"):
+                return await self.browser.goto(command.url)
+            case FillCommand(name="fill"):
+                return await self.browser.fill(str(command.label), command.value)
+            case SelectCommand(name="select"):
+                return await self.browser.select(str(command.label), command.options)
+            case ScrollCommand(name="scroll"):
+                return await self.browser.vertical_scroll(command.direction)
+            case FinishCommand(name="finish"):
+                return ""
 
     @property
     def system_prompt(self) -> str:
